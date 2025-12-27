@@ -1,82 +1,86 @@
 # Start Here (2 minutes)
 
-If you’re reviewing me for IAM / identity / cloud security roles, this repo is meant to feel like **internal documentation**:
-**clear steps, clear proof, and no secret leakage**.
+If you’re reading this, it’s probably because **a user can’t access an app** or **provisioning isn’t doing what it should**.  
+This pack is how I approach the problem as an IAM operator: **simple first, fast isolation, proof-based validation.**
 
 ---
 
-## Pick a review path
-
-### 1) Hiring manager view (fast)
-1. Read this page
-2. Open the SSO pack: [01-sso-protocol-pack/README.md](../01-sso-protocol-pack/README.md)
-3. Skim what’s next: [90-roadmap.md](../90-roadmap.md)
-
-### 2) Technical reviewer view (how I troubleshoot)
-1. SSO pack → runbooks → verification → evidence  
-   [01-sso-protocol-pack/README.md](../01-sso-protocol-pack/README.md)
-
-### 3) Governance / audit-minded view (how I stay safe + consistent)
-1. Evidence rules (below)
-2. Verification logs (what I capture and why)
-3. Decisions + changelog discipline (why I chose the approach + what changed)
+## What this pack is (in one sentence)
+A practical guide to **SSO (SAML/OIDC)** and **provisioning (SCIM)** that shows how I troubleshoot issues and document results with **sanitized evidence**.
 
 ---
 
-## How I work (my operator workflow)
-When something breaks, I don’t guess. I isolate the failure domain and prove it.
+## My workflow (the way I actually run this)
+### Step 1 — Decide what’s broken
+- **SSO issue:** user can’t sign in / session isn’t established
+- **Provisioning issue:** user can sign in, but account/roles aren’t created/updated/disabled correctly
 
-1. **Decide what’s broken**
-   - Is it **SSO** (login/session) or **Provisioning** (create/update/disable accounts)?
+### Step 2 — Isolate the failure domain
+I don’t “guess.” I isolate the failure domain:
+- **IdP side** (Entra/Okta sign-in + policy outcomes)
+- **Protocol config** (SAML/OIDC settings that must match)
+- **App authorization** (roles/entitlements mapping — authentication ≠ access)
+- **Provisioning pipeline** (SCIM auth, endpoint, schema, throttling)
 
-2. **Isolate the failure domain**
-   - **IdP** (Entra/Okta): sign-in + policy outcome
-   - **Protocol config** (SAML/OIDC): endpoints, signing, token/assertion expectations
-   - **App authorization**: roles/entitlements mapping (auth success but no access)
+### Step 3 — Verify the fix (success criteria)
+I confirm success in the same order every time:
+- sign-in result is correct
+- protocol validation checks pass
+- app authorization is correct
+- provisioning run behaves as expected (if SCIM)
 
-3. **Verify success criteria**
-   - “Good” has a definition (not vibes). I document what success looks like.
-
-4. **Capture sanitized proof**
-   - Minimal, safe-to-share evidence (usually 1–3 items)
-
-5. **Record the change + rollback**
-   - What I changed, why, how to undo it (change discipline matters)
-
-> [!TIP]
-> If you only have 60 seconds, open the SSO pack and follow the troubleshooting flow:
-> [01-sso-protocol-pack/README.md](../01-sso-protocol-pack/README.md)
-
----
-
-## Evidence rules (non-negotiable)
-I use a lab environment to capture proof, but I keep it **safe-to-share**.
-
-### What I *do* include
-- Config summaries (endpoints + requirements) **without IDs/secrets**
-- Sign-in/provisioning outcomes (success/failure category) **without identifiers**
-- Before/after change notes + rollback plan
-- Screenshots only when needed, **heavily redacted**
-
-### What I *never* publish
-- secrets/tokens/passwords/private keys/certs
-- tenant/app/object IDs, subscription IDs
-- real emails, internal domains, IPs tied to private systems
-- raw SAML assertions / raw JWTs / raw logs with identifiers
-
-> [!IMPORTANT]
-> “Sanitized” means I remove or replace identifying values (IDs, emails, domains) and only keep what proves the technical point.
+### Step 4 — Record what changed (so it’s repeatable)
+I log:
+- what I changed
+- why I changed it
+- what “good” looks like (verification)
+- how I would roll it back
 
 ---
 
-## Decisions vs Changelog (quick clarity)
-- **Decisions** = “I chose this approach because…” (assumptions + tradeoffs)
-- **Changelog** = “I changed this on this date…” (what changed + impact)
+## Pick your path (choose one)
 
-I keep both lightweight, but consistent.
+### Path A — I just need the right “first checks”
+Start with the protocol notes:
+- **SAML:** [01_SAML.md](./01_SAML.md)
+- **OIDC:** [02_OIDC.md](./02_OIDC.md)
+- **SCIM:** [03_SCIM.md](./03_SCIM.md)
+
+### Path B — I’m troubleshooting an outage / incident
+Use the operator sequence:
+1. Runbooks: [04_Troubleshooting_Runbooks.md](./04_Troubleshooting_Runbooks.md)  
+2. Verify: [05_Verification_Checklist.md](./05_Verification_Checklist.md)  
+3. Capture proof: [evidence/README.md](./evidence/README.md)
+
+### Path C — I’m doing a clean implementation / go-live
+Use the governance sequence:
+1. Controls + policy references: [06_Controls_and_Policy_References.md](./06_Controls_and_Policy_References.md)  
+2. Logging + telemetry plan: [08_Logging_and_Telemetry.md](./08_Logging_and_Telemetry.md)  
+3. Change + rollback discipline: [09_Change_Management_and_Rollback.md](./09_Change_Management_and_Rollback.md)
 
 ---
 
-## Next up
-Go to the SSO Protocol Pack:
-➡️ [01-sso-protocol-pack/README.md](../01-sso-protocol-pack/README.md)
+## Evidence standard (what I capture)
+I keep proof **minimal** and **safe-to-share** (usually 1–3 items per scenario):
+- sign-in outcome summary (no tenant/app/object IDs)
+- config summary (no secrets, no identifiers)
+- before/after change summary + rollback note
+- SCIM run result summary by category (no raw payloads)
+
+> [!WARNING]
+> I do **not** publish secrets, tenant/app/object IDs, real emails, internal domains, tokens, or raw assertions/responses.
+
+---
+
+## Definitions I use (so we’re speaking the same language)
+- **IdP**: Identity Provider (Entra ID / Okta)
+- **SP / Relying Party**: the app being accessed
+- **Authentication**: “who you are”
+- **Authorization**: “what you can do” (roles/entitlements)
+- **Provisioning**: lifecycle automation (create/update/disable via SCIM)
+
+---
+
+## If you want the fastest win
+If you only do one thing: **separate authentication from authorization.**  
+Most “SSO is broken” tickets are actually “user authenticated but has no role/entitlement in the app.”
